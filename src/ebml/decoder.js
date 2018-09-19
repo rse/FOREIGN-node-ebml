@@ -95,7 +95,7 @@ export default class EbmlDecoder extends Transform {
     if (!this.buffer) {
       this.buffer = Buffer.from(chunk);
     } else {
-      this.buffer = tools.concatenate(this.buffer, Buffer.from(chunk));
+      this.buffer = Buffer.concat([this.buffer, Buffer.from(chunk)]);
     }
 
     while (this.cursor < this.buffer.length) {
@@ -105,12 +105,10 @@ export default class EbmlDecoder extends Transform {
       if (this.state === STATE_SIZE && !this.readSize()) {
         break;
       }
-      if (this.state === STATE_CONTENT && !this.readContent()) {
+      if (this.state === STATE_CONTENT && !this.readContent(done)) {
         break;
       }
     }
-
-    done();
   }
 
   static getSchemaInfo(tag) {
@@ -222,7 +220,7 @@ export default class EbmlDecoder extends Transform {
     return true;
   }
 
-  readContent() {
+  readContent(done) {
     const { tagStr, type, dataSize, ...rest } = this.tagStack[
       this.tagStack.length - 1
     ];
@@ -235,7 +233,7 @@ export default class EbmlDecoder extends Transform {
       if (debug.enabled) {
         debug('content should be tags');
       }
-      this.push(['start', { tagStr, type, dataSize, ...rest }]);
+      done(null, ['start', { tagStr, type, dataSize, ...rest }]);
       this.state = STATE_TAG;
 
       return true;
@@ -259,7 +257,7 @@ export default class EbmlDecoder extends Transform {
 
     this.tagStack.pop(); // remove the object from the stack
 
-    this.push([
+    done(null, [
       'tag',
       tools.readDataFromTag(
         { tagStr, type, dataSize, ...rest },
@@ -272,7 +270,7 @@ export default class EbmlDecoder extends Transform {
       if (this.total < topEle.end) {
         break;
       }
-      this.push(['end', topEle]);
+      done(null, ['end', topEle]);
       this.tagStack.pop();
     }
 
