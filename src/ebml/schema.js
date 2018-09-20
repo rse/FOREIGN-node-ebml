@@ -1285,6 +1285,30 @@ const schema = new Map([
     },
   ],
   [
+    0x47e8,
+    {
+      name: 'AESSettingsCipherMode',
+      level: 7,
+      type: 'u',
+      minver: 1,
+      default: 1,
+      webm: true,
+      description: 'The cipher mode used in the encryption. Predefined values: 1 - CTR'
+    }
+  ],
+  [
+    0x47e7,
+    {
+      name: 'ContentEncAESSettings',
+      level: 6,
+      type: 'm',
+      minver: 1,
+      webm: true,
+      description:
+      'Settings describing the encryption algorithm used. If ContentEncAlgo != 5 this MUST be absent.'
+    }
+  ],
+  [
     0x47e6,
     {
       name: 'ContentSigHashAlgo',
