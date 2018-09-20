@@ -218,6 +218,5 @@ export default class EbmlEncoder extends Transform {
     if (this.stack.length < 1) {
       this.bufferAndFlush(tag.data.buffer);
     }
-    this.end();
   }
 }
