@@ -42,7 +42,7 @@ describe('EBML', () => {
         },
       ]);
       encoder.write(['end', { name: 'EBML' }]);
-      // encoder.end();
+      encoder.end();
     });
     describe('#cork and #uncork', () => {
       let encoder;

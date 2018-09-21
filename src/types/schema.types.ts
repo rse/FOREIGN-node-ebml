@@ -1,5 +1,3 @@
-/* @flow */
-/* eslint-disable flowtype/space-after-type-colon */
 export type EBMLSchema = {
   name: string,
   type: 'm' | 'u' | 'i' | 'f' | 's' | '8' | 'd' | 'b' | null,

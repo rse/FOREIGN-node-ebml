@@ -1,6 +1,4 @@
-// @flow
-
-import type { EBMLSchema } from './schema.types';
+import { EBMLSchema } from './schema.types';
 
 export type TagMeta = {
   data: Buffer,
@@ -13,7 +11,7 @@ export type TagMeta = {
   start: number,
   tagStr: string,
   track: number,
-  value: number | string,
+  value: number | string
 };
 
 export type Tag = EBMLSchema & TagMeta;
