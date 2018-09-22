@@ -1,19 +1,21 @@
 import assert from 'assert';
-import tools from './tools';
+import { Tools as tools } from '../tools';
+import "jasmine";
 
 describe('EBML', () => {
   describe('tools', () => {
     describe('#readVint()', () => {
       function readVint(buffer, expected) {
         const vint = tools.readVint(buffer, 0);
-        assert.strictEqual(expected, vint.value);
-        assert.strictEqual(buffer.length, vint.length);
+        assert.strictEqual(vint.value, expected);
+        assert.strictEqual(vint.length, buffer.length);
       }
 
       it('should read the correct value for all 1 byte ints', () => {
-        for (let i = 0; i < 0x80; i += 1) {
+        for (let i = 0; i < 0x80 - 1; i += 1) {
           readVint(Buffer.from([i | 0x80]), i);
         }
+        readVint(Buffer.from([0xff]), -1);
       });
       it('should read the correct value for 1 byte int with non-zero start', () => {
         const b = Buffer.from([0x00, 0x81]);
@@ -39,17 +41,17 @@ describe('EBML', () => {
       // not brute forcing any more bytes, takes sooo long
       it('should read the correct value for 4 byte int min/max values', () => {
         readVint(Buffer.from([0x10, 0x20, 0x00, 0x00]), 2 ** 21);
-        readVint(Buffer.from([0x1f, 0xff, 0xff, 0xff]), 2 ** 28 - 1);
+        readVint(Buffer.from([0x1f, 0xff, 0xff, 0xfe]), 2 ** 28 - 2);
       });
       it('should read the correct value for 5 byte int min/max values', () => {
         readVint(Buffer.from([0x08, 0x10, 0x00, 0x00, 0x00]), 2 ** 28);
-        readVint(Buffer.from([0x0f, 0xff, 0xff, 0xff, 0xff]), 2 ** 35 - 1);
+        readVint(Buffer.from([0x0f, 0xff, 0xff, 0xff, 0xfe]), 2 ** 35 - 2);
       });
       it('should read the correct value for 6 byte int min/max values', () => {
         readVint(Buffer.from([0x04, 0x08, 0x00, 0x00, 0x00, 0x00]), 2 ** 35);
         readVint(
-          Buffer.from([0x07, 0xff, 0xff, 0xff, 0xff, 0xff]),
-          2 ** 42 - 1,
+          Buffer.from([0x07, 0xff, 0xff, 0xff, 0xff, 0xfe]),
+          2 ** 42 - 2,
         );
       });
       it('should read the correct value for 7 byte int min/max values', () => {
@@ -58,8 +60,8 @@ describe('EBML', () => {
           2 ** 42,
         );
         readVint(
-          Buffer.from([0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]),
-          2 ** 49 - 1,
+          Buffer.from([0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe]),
+          2 ** 49 - 2,
         );
       });
       it('should read the correct value for 8 byte int min value', () => {
@@ -177,26 +179,6 @@ describe('EBML', () => {
         assert.throws(() => {
           tools.writeVint(2 ** 56 + 1);
         }, /Unrepresentable value/);
-      });
-    });
-    describe('#concatenate', () => {
-      it('returns the 2nd buffer if the first is invalid', () => {
-        assert.ok(
-          tools.concatenate(null, Buffer.from([0x01])),
-          Buffer.from([0x01]),
-        );
-      });
-      it('returns the 1st buffer if the second is invalid', () => {
-        assert.ok(
-          tools.concatenate(Buffer.from([0x01]), null),
-          Buffer.from([0x01]),
-        );
-      });
-      it('returns the two buffers joined if both are valid', () => {
-        assert.ok(
-          tools.concatenate(Buffer.from([0x01]), Buffer.from([0x01])),
-          Buffer.from([0x01, 0x01]),
-        );
       });
     });
     describe('#readFloat', () => {

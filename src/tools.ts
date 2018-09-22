@@ -3,38 +3,37 @@ import { SimpleBlockData } from "./models/SimpleBlockData";
 import { EbmlElementType } from "./models/EbmlElementType";
 import { EbmlTagId } from "./models/EbmlTagId";
 import { EbmlTag } from "./models/EbmlTag";
+import { BlockData } from "./models/BlockData";
+import { BlockLacing } from "./models/BlockLacing";
 
 export class Tools {
-  /**
-   * read variable length integer per
-   * https://www.matroska.org/technical/specs/index.html#EBML_ex
-   * @param {Buffer} buffer containing input
-   * @param {Number} [start=0] position in buffer
-   * @returns {{length: Number, value: number}}  value / length object
-   */
-  static readVint(buffer, start = 0) {
+  static readVint(buffer: Buffer, start: number = 0): {length: number, value: number} {
     const length = 8 - Math.floor(Math.log2(buffer[start]));
     if (length > 8) {
       const number = Tools.readHexString(buffer, start, start + length);
       throw new Error(`Unrepresentable length: ${length} ${number}`);
     }
 
-    if (start + length > buffer.length) {
+    if (isNaN(length) || start + length > buffer.length) {
       return null;
+    }
+
+    //Max representable integer in JS
+    if(length === 8 && buffer[start + 1] >= 0x20 && buffer.subarray(start + 2, start + 8).some(i => i > 0x00)) {
+      return {
+        length: 8,
+        value: -1
+      };
     }
 
     let value = buffer[start] & ((1 << (8 - length)) - 1);
     for (let i = 1; i < length; i += 1) {
-      if (i === 7) {
-        if (value >= 2 ** 8 && buffer[start + 7] > 0) {
-          return {
-            length,
-            value: -1,
-          };
-        }
-      }
       value *= 2 ** 8;
       value += buffer[start + i];
+    }
+    
+    if (value === (2 ** (length*7) - 1)) {
+      value = -1;
     }
 
     return {
@@ -43,20 +42,17 @@ export class Tools {
     };
   }
 
-  /**
-   * write variable length integer
-   * @param {Number} value to store into buffer
-   * @returns {Buffer} containing the value
-   */
-  static writeVint(value) {
-    if (value < 0 || value > 2 ** 53) {
+  static writeVint(value: number, desiredLength?: number): Buffer {
+    if (value < 0 || value > (2 ** 53)) {
       throw new Error(`Unrepresentable value: ${value}`);
     }
 
-    let length = 1;
-    for (length = 1; length <= 8; length += 1) {
-      if (value < 2 ** (7 * length) - 1) {
-        break;
+    let length = desiredLength;
+    if(!length) {
+      for (length = 1; length <= 8; length += 1) {
+        if (value < 2 ** (7 * length) - 1) {
+          break;
+        }
       }
     }
 
@@ -91,7 +87,7 @@ export class Tools {
    * @returns {string} the hex string
    */
   static readHexString(buff, start = 0, end = buff.byteLength) {
-    return Array.from(buff.slice(start, end))
+    return Array.from(buff.subarray(start, end))
       .map(q => Number(q).toString(16))
       .reduce((acc, current) => `${acc}${this.padStart(current)}`, '');
   }
@@ -144,7 +140,7 @@ export class Tools {
       buf.writeUInt32BE(num, 0);
       let firstValueIndex = buf.findIndex(b => b !== 0);
       if(firstValueIndex === -1) {
-        firstValueIndex = 0;
+        firstValueIndex = buf.length - 1;
       }
       let ret = buf.slice(firstValueIndex);
       return ret;
@@ -204,7 +200,7 @@ export class Tools {
     return buf;
   }
 
-  static readDataFromTag(tagType: EbmlTagType, data: Buffer): number | string | SimpleBlockData | Buffer {
+  static readDataFromTag(tagType: EbmlTagType, data: Buffer): number | string | Buffer | BlockData | SimpleBlockData {
     switch (tagType.dataType) {
       case EbmlElementType.UnsignedInt:
         return Tools.readUnsigned(data);
@@ -221,20 +217,35 @@ export class Tools {
     }
 
     if (tagType.id === EbmlTagId.SimpleBlock || tagType.id === EbmlTagId.Block) {
-      let simpleBlockData = new SimpleBlockData();
-      let p = 0;
-      const track = Tools.readVint(data, p);
-      p += track.length;
-      simpleBlockData.track = track.value;
-      const value = Tools.readSigned(data.slice(p, 2));
-      p += 2;
-      if (tagType.id === EbmlTagId.SimpleBlock) {
-        simpleBlockData.keyframe = Boolean(data[p] & 0x80);
-        simpleBlockData.discardable = Boolean(data[p] & 0x01);
+      let blockData = new BlockData();
+      const track = Tools.readVint(data);
+      blockData.track = track.value;
+      blockData.value = Tools.readSigned(data.subarray(track.length, track.length+2));
+      let flags: number = data[track.length+2];
+      blockData.invisible = Boolean(flags & 0x10);
+      switch(flags & 0x0c) {
+        case 0x00:
+          blockData.lacing = BlockLacing.None;
+          break;
+        
+        case 0x04:
+          blockData.lacing = BlockLacing.Xiph;
+          break;
+
+        case 0x08:
+          blockData.lacing = BlockLacing.EBML;
+          break;
+
+        case 0x0c:
+          blockData.lacing = BlockLacing.FixedSize;
+          break;
       }
-      p += 1;
-      simpleBlockData.payload = data.slice(p);
-      return simpleBlockData;
+      if (tagType.id === EbmlTagId.SimpleBlock) {
+        (<SimpleBlockData>blockData).keyframe = Boolean(flags & 0x80);
+        (<SimpleBlockData>blockData).discardable = Boolean(flags & 0x01);
+      }
+      blockData.payload = data.slice(track.length + 3);
+      return blockData;
     }
 
     return data;
@@ -267,12 +278,42 @@ export class Tools {
     if (tag.type.id === EbmlTagId.SimpleBlock || tag.type.id === EbmlTagId.Block) {
       let simpleBlockData: SimpleBlockData = <SimpleBlockData>tag.data;
 
-      let len = 3+simpleBlockData.payload.length;
-      outData = Buffer.alloc(len);
-      outData[0] = simpleBlockData.track;
-      outData[2] = simpleBlockData.keyframe ? 0x80 : 0x00;
-      outData[2] |= simpleBlockData.discardable ? 0x01 : 0x00;
-      simpleBlockData.payload.copy(outData, 3, 0);
+      let outTrack = Tools.writeVint(simpleBlockData.track);
+      let value = Buffer.alloc(2);
+      value.writeInt16BE(simpleBlockData.value, 0);
+
+      let flags = 0x00;
+      if(simpleBlockData.invisible) {
+        flags |= 0x10;
+      }
+      switch(simpleBlockData.lacing) {
+        case BlockLacing.None:
+          break;
+        case BlockLacing.Xiph:
+          flags |= 0x04;
+          break;
+        case BlockLacing.EBML:
+          flags |= 0x08;
+          break;
+        case BlockLacing.FixedSize:
+          flags |= 0x0c;
+          break;
+      }
+      if(simpleBlockData.keyframe) {
+        flags |= 0x80;
+      }
+      if(simpleBlockData.discardable) {
+        flags |= 0x01;
+      }
+
+      let len = outTrack.length + 3 + simpleBlockData.payload.length;
+
+      outData = Buffer.concat([
+        outTrack,
+        value,
+        Buffer.of(flags),
+        simpleBlockData.payload
+      ]);
     }
     
     let vint = Tools.writeVint(outData.length);

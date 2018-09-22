@@ -12,7 +12,7 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jasmine",
     "build": "tsc",
     "prepublish": "check-node-version --npm \">=4\" || npm run prepare",
     "prepare": "npm run build",
@@ -31,7 +31,9 @@
   ],
   "dependencies": {},
   "devDependencies": {
+    "@types/jasmine": "^2.8.8",
     "@types/node": "^10.10.1",
+    "jasmine": "^3.2.0",
     "rimraf": "^2.6.2",
     "typescript": "^3.0.3"
   },

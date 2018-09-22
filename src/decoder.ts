@@ -5,24 +5,17 @@ import { EbmlTagType } from './models/EbmlTagType';
 import { EbmlTag } from './models/EbmlTag';
 import { EbmlElementType } from './models/EbmlElementType';
 import { EbmlTagPosition } from './models/EbmlTagPosition';
-
-enum ProcessState {
-  Tag,
-  Content
-}
-
-class ProcessingTag {
-  type: EbmlTagType;
-  absoluteStart: number;
-  size: number;
-}
+import { EbmlTagId } from './models/EbmlTagId';
 
 export class EbmlDecoder extends Transform {
-  private _buffer: Buffer = Buffer.alloc(0);
-  private _currentPositionInBuffer: number = 0;
   private _currentBufferOffset: number = 0;
   private _tagStack: ProcessingTag[] = [];
-  private _processingState: ProcessState = ProcessState.Tag;
+  private _buffer: Buffer = Buffer.alloc(0);
+
+  /* Expose property for testing */
+  get buffer(): Buffer {
+    return this._buffer;
+  }
 
   constructor(options: TransformOptions = {}) {
     super({ ...options, readableObjectMode: true });
@@ -49,79 +42,101 @@ export class EbmlDecoder extends Transform {
   }
 
   private parseTags(): boolean {
-    if(this._processingState === ProcessState.Tag) {
-      if (this._currentPositionInBuffer >= this._buffer.length) {
-        return false;
-      }
-      const tag = tools.readVint(this._buffer, this._currentPositionInBuffer);
-      if (tag == null) {
-        return false;
-      }
-      const size = tools.readVint(this._buffer, this._currentPositionInBuffer + tag.length);
-      if(size == null) {
-        return false;
-      }
-      
-      const tagId = tools.readHexString(this._buffer, this._currentPositionInBuffer, this._currentPositionInBuffer + tag.length);
-      const tagType = this.getTagType(Number.parseInt(tagId, 16));
-      const absoluteStart = this._currentBufferOffset + this._currentPositionInBuffer;
+    const currentTag = this.readTagHeader(this._buffer);
+    if(!currentTag) {
+      return false;
+    }
+
+    if(currentTag.tagType.dataType === EbmlElementType.Master) {
       this._tagStack.push({
-        type: tagType,
-        absoluteStart: absoluteStart,
-        size: size.value
+        type: currentTag.tagType,
+        absoluteStart: this._currentBufferOffset,
+        contentSize: currentTag.tagSize,
+        headerSize: currentTag.tagHeaderLength
       });
-      this._currentPositionInBuffer += (tag.length + size.length);
+      this.push(<EbmlTag>{
+        type: currentTag.tagType,
+        position: EbmlTagPosition.Start,
+        size: currentTag.tagSize
+      });
+      this.advanceBuffer(currentTag.tagHeaderLength);
+
+      return true;
+    } else {
+      if(this._buffer.length < currentTag.tagHeaderLength + currentTag.tagSize) {
+        return false;
+      }
+
+      const data = this._buffer.slice(currentTag.tagHeaderLength, currentTag.tagHeaderLength+ currentTag.tagSize);
+      this.advanceBuffer(currentTag.tagHeaderLength + currentTag.tagSize);
       
-      this._processingState = ProcessState.Content;
-    }
-    if(this._processingState === ProcessState.Content) {
-      const currentTag = this._tagStack[this._tagStack.length-1];
+      this.push(<EbmlTag>{
+        type: currentTag.tagType,
+        position: EbmlTagPosition.Content,
+        size: currentTag.tagSize,
+        data: tools.readDataFromTag(
+          currentTag.tagType,
+          Buffer.from(data)
+        )
+      });
       
-      if (currentTag.type.dataType === EbmlElementType.Master) {
-        this.push(<EbmlTag>{
-          type: currentTag.type,
-          position: EbmlTagPosition.Start,
-          size: currentTag.size
-        });
-        this._processingState = ProcessState.Tag;
-      } else {
-        if (this._buffer.length < this._currentPositionInBuffer + currentTag.size) {
-          return false;
+      while (this._tagStack.length > 0) {
+        const nextTag = this._tagStack[this._tagStack.length - 1];
+        if (this._currentBufferOffset < (nextTag.absoluteStart + nextTag.headerSize + nextTag.contentSize)) {
+          break;
         }
 
-        const data = this._buffer.slice(this._currentPositionInBuffer, this._currentPositionInBuffer + currentTag.size);
-        this._processingState = ProcessState.Tag;
-
-        this._currentPositionInBuffer += currentTag.size;
-        this._currentBufferOffset += this._currentPositionInBuffer;
-        this._buffer = this._buffer.slice(this._currentPositionInBuffer);
-        this._currentPositionInBuffer = 0;
-        
-        this._tagStack.pop(); // remove the object from the stack
-        
         this.push(<EbmlTag>{
-          type: currentTag.type,
-          position: EbmlTagPosition.Content,
-          data: tools.readDataFromTag(
-            currentTag.type,
-            Buffer.from(data)
-          )
+          type: nextTag.type,
+          position: EbmlTagPosition.End,
+          size: nextTag.contentSize
         });
-          
-        while (this._tagStack.length > 0) {
-          const nextTag = this._tagStack[this._tagStack.length - 1];
-          if (this._currentBufferOffset + this._currentPositionInBuffer < (nextTag.absoluteStart + nextTag.size)) {
-            break;
-          }
-          this.push(<EbmlTag>{
-            type: nextTag.type,
-            position: EbmlTagPosition.End,
-            size: nextTag.size
-          });
-          this._tagStack.pop();
-        }
+        this._tagStack.pop();
       }
     }
+
     return true;
   }
+
+  private advanceBuffer(length: number): void {
+      this._currentBufferOffset += length;
+      this._buffer = this._buffer.slice(length);
+  }
+
+  private readTagHeader(buffer: Buffer, offset: number = 0): EbmlTagHeader {
+    if (buffer.length == 0) {
+      return null;
+    }
+    const tag = tools.readVint(buffer);
+    if (tag == null) {
+      return null;
+    }
+    const size = tools.readVint(buffer, tag.length);
+    if(size == null) {
+      return null;
+    }
+    
+    const tagId = tools.readHexString(buffer, 0, tag.length);
+    const tagType = this.getTagType(Number.parseInt(tagId, 16));
+
+    return {
+      tagType: tagType,
+      tagSize: size.value,
+      tagHeaderLength: tag.length + size.length
+    };
+  }
+
+}
+
+class EbmlTagHeader {
+  tagType: EbmlTagType;
+  tagSize: number;
+  tagHeaderLength: number;
+}
+
+class ProcessingTag {
+  type: EbmlTagType;
+  absoluteStart: number;
+  headerSize: number;
+  contentSize: number;
 }

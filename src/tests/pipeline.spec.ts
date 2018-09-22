@@ -1,11 +1,11 @@
 import assert from 'assert';
-import { Decoder, Encoder } from '../src/ebml';
+import { EbmlDecoder, EbmlEncoder } from '..';
 
 describe('ebml', () => {
   describe('Pipeline', () => {
     it('should output input buffer', done => {
-      const decoder = new Decoder();
-      const encoder = new Encoder();
+      const decoder = new EbmlDecoder();
+      const encoder = new EbmlEncoder();
       const buffer = Buffer.from([
         0x1a,
         0x45,
@@ -30,8 +30,8 @@ describe('ebml', () => {
     });
 
     it('should support end === -1', done => {
-      const decoder = new Decoder();
-      const encoder = new Encoder();
+      const decoder = new EbmlDecoder();
+      const encoder = new EbmlEncoder();
 
       encoder.write([
         'start',

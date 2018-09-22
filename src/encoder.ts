@@ -16,23 +16,25 @@ export class EbmlEncoder extends Transform {
   }
 
   _transform(chunk: EbmlTag, enc: string, done: TransformCallback) {
-    if (!chunk.type.id) {
-      throw new Error(`No schema entry found for ${chunk}`);
-    }
+    if(chunk && chunk.type) {
+      if (!chunk.type.id) {
+        throw new Error(`No schema entry found for ${chunk}`);
+      }
 
-    switch (chunk.position) {
-      case EbmlTagPosition.Start:
-        this.startTag(chunk);
-        break;
-      case EbmlTagPosition.Content:
-        this.writeTag(chunk);
-        break;
-      case EbmlTagPosition.End:
-        this.endTag(chunk);
-        break;
+      switch (chunk.position) {
+        case EbmlTagPosition.Start:
+          this.startTag(chunk);
+          break;
+        case EbmlTagPosition.Content:
+          this.writeTag(chunk);
+          break;
+        case EbmlTagPosition.End:
+          this.endTag(chunk);
+          break;
 
-      default:
-        break;
+        default:
+          break;
+      }
     }
 
     done();
@@ -61,9 +63,25 @@ export class EbmlEncoder extends Transform {
     callback();
   }
 
-  // _bufferAndFlush(buffer) {
-  //   this.bufferAndFlush(buffer);
-  // }
+  /* For testing */
+  _bufferAndFlush(buffer) {
+    this.bufferAndFlush(buffer);
+  }
+
+  flush(): void {
+    this._flush(() => {});
+  }
+
+  get buffer(): Buffer {
+    return this.dataBuffer;
+  }
+  set buffer(val: Buffer) {
+    this.dataBuffer = val;
+  }
+
+  get stack(): OpenTag[] {
+    return this.openTags;
+  }
 
   cork() {
     this.mCorked = true;
@@ -99,11 +117,26 @@ export class EbmlEncoder extends Transform {
       throw `Logic error - ${tag.type} is not ${inMemoryTag.type}`;
     }
     let childData = Buffer.concat(inMemoryTag.children.map(child => child.encodedContent));
+    let vintSize = null;
+    if(inMemoryTag.size === -1) {
+      vintSize = Buffer.from('01ffffffffffffff', 'hex');
+    } else {
+      let specialLength: number = undefined;
+      if([
+        EbmlTagId.Segment,
+        EbmlTagId.Cluster
+      ].some(i => i === inMemoryTag.type.id)) {
+        specialLength = 8;
+      }
+      vintSize = tools.writeVint(childData.length, specialLength);
+    }
+
     inMemoryTag.encodedContent = Buffer.concat([
       this.getTagDeclaration(tag),
-      inMemoryTag.size === -1 ? Buffer.from('01ffffffffffffff', 'hex') : tools.writeVint(childData.length),
+      vintSize,
       childData
     ]);
+
     if (this.openTags.length < 1) {
       this.bufferAndFlush(inMemoryTag.encodedContent);
     }
