@@ -1,9 +1,9 @@
 import assert from 'assert';
-import { EbmlStreamDecoder as Decoder } from '../decoder';
+import { EbmlStreamDecoder as Decoder } from '../EbmlStreamDecoder';
 import "jasmine";
-import { EbmlTagPosition } from '../models/EbmlTagPosition';
-import { EbmlElementType } from '../models/EbmlElementType';
-import { EbmlDataTag } from '../models/EbmlDataTag';
+import { EbmlTagPosition } from '../models/enums/EbmlTagPosition';
+import { EbmlElementType } from '../models/enums/EbmlElementType';
+import { EbmlDataTag } from '../models/tags/EbmlDataTag';
 
 describe('EBML', () => {
   describe('Decoder', () => {

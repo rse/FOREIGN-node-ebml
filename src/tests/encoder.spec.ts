@@ -1,9 +1,9 @@
 import assert from 'assert';
-import { EbmlStreamEncoder as Encoder } from '../encoder';
+import { EbmlStreamEncoder as Encoder } from '../EbmlStreamEncoder';
 import "jasmine";
-import { EbmlTagId } from '../models/EbmlTagId';
+import { EbmlTagId } from '../models/enums/EbmlTagId';
 import { EbmlTag } from '../models/EbmlTag';
-import { EbmlTagPosition } from '../models/EbmlTagPosition';
+import { EbmlTagPosition } from '../models/enums/EbmlTagPosition';
 import { EbmlTagFactory } from '../models/EbmlTagFactory';
 
 const invalidTag = <EbmlTag><any>{

@@ -1,8 +1,8 @@
 import { Transform, TransformOptions, TransformCallback } from 'stream';
 import { EbmlTag } from './models/EbmlTag';
-import { EbmlTagPosition } from './models/EbmlTagPosition';
-import { EbmlTagId } from './models/EbmlTagId';
-import { EbmlMasterTag } from './models/EbmlMasterTag';
+import { EbmlTagPosition } from './models/enums/EbmlTagPosition';
+import { EbmlTagId } from './models/enums/EbmlTagId';
+import { EbmlMasterTag } from './models/tags/EbmlMasterTag';
 
 export class EbmlStreamEncoder extends Transform {
   private dataBuffer: Buffer = Buffer.alloc(0);

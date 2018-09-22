@@ -1,9 +1,10 @@
-import { EbmlTagId, EbmlTag } from "..";
-import { EbmlMasterTag } from "./EbmlMasterTag";
-import { EbmlDataTag } from "./EbmlDataTag";
-import { Block } from "./Block";
-import { SimpleBlock } from "./SimpleBlock";
-import { EbmlElementType } from "./EbmlElementType";
+import { EbmlTagId } from "./enums/EbmlTagId";
+import { EbmlTag } from './EbmlTag';
+import { EbmlMasterTag } from "./tags/EbmlMasterTag";
+import { EbmlDataTag } from "./tags/EbmlDataTag";
+import { Block } from "./tags/Block";
+import { SimpleBlock } from "./tags/SimpleBlock";
+import { EbmlElementType } from "./enums/EbmlElementType";
 
 export class EbmlTagFactory {
     static create(commonTagId: EbmlTagId.ChapterDisplay |
