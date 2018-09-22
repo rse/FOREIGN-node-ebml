@@ -1,9 +1,11 @@
 import fs from 'fs';
 import assert from 'assert';
-import { EbmlDecoder, EbmlTag } from '..';
+import { EbmlStreamDecoder } from '../decoder';
 import { EbmlTagPosition } from '../models/EbmlTagPosition';
 import { EbmlTagId } from '../models/EbmlTagId';
-import { SimpleBlockData } from '../models/SimpleBlockData';
+import { EbmlDataTag } from '../models/EbmlDataTag';
+import { SimpleBlock } from '../models/SimpleBlock';
+import { EbmlTag } from '../models/EbmlTag';
 
 process.setMaxListeners(Infinity);
 
@@ -13,9 +15,9 @@ describe('EBML', () => {
       const data = fs.readFileSync('media/video-webm-codecs-avc1-42E01E.webm');
 
       it('should get a correct PixelWidth value from a file (2-byte unsigned int)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.PixelWidth) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.PixelWidth) {
             assert.strictEqual(tag.data, 352);
             done();
           }
@@ -28,9 +30,9 @@ describe('EBML', () => {
       });
 
       it('should get a correct EBMLVersion value from a file (one-byte unsigned int)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.EBMLVersion) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.EBMLVersion) {
             assert.strictEqual(tag.data, 1);
             done();
           }
@@ -43,9 +45,9 @@ describe('EBML', () => {
       });
 
       it('should get a correct TimeCodeScale value from a file (3-byte unsigned int)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.TimecodeScale) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.TimecodeScale) {
             assert.strictEqual(tag.data, 1000000);
             done();
           }
@@ -58,9 +60,9 @@ describe('EBML', () => {
       });
 
       it('should get a correct TrackUID value from a file (56-bit integer in hex)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.TrackUID) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.TrackUID) {
             assert.strictEqual(tag.data, '1c63824e507a46');
             done();
           }
@@ -73,9 +75,9 @@ describe('EBML', () => {
       });
 
       it('should get a correct DocType value from a file (ASCII text)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.DocType) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.DocType) {
             assert.strictEqual(tag.data, 'matroska');
             done();
           }
@@ -88,9 +90,9 @@ describe('EBML', () => {
       });
 
       it('should get a correct MuxingApp value from a file (utf8 text)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.MuxingApp) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.MuxingApp) {
             assert.strictEqual(tag.data, 'Chrome', JSON.stringify(tag));
             done();
           }
@@ -103,18 +105,18 @@ describe('EBML', () => {
       });
 
       it('should get a correct SimpleBlock time payload from a file (binary)', done => {
-        const decoder = new EbmlDecoder();
+        const decoder = new EbmlStreamDecoder();
         decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.SimpleBlock) {
-            let simpleBlockData = <SimpleBlockData>tag.data;
-            if (simpleBlockData.value > 0 && simpleBlockData.value < 200) {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.SimpleBlock) {
+            let simpleBlock = <SimpleBlock>tag;
+            if (simpleBlock.value > 0 && simpleBlock.value < 200) {
               /* look at second simpleBlock */
-              assert.strictEqual(simpleBlockData.track, 1, 'track');
-              assert.strictEqual(simpleBlockData.value, 191, 'value (timestamp)');
+              assert.strictEqual(simpleBlock.track, 1, 'track');
+              assert.strictEqual(simpleBlock.value, 191, 'value (timestamp)');
               assert.strictEqual(
-                simpleBlockData.payload.byteLength,
+                simpleBlock.payload.byteLength,
                 169,
-                JSON.stringify(simpleBlockData.payload),
+                JSON.stringify(simpleBlock.payload),
               );
               done();
             }
@@ -132,9 +134,9 @@ describe('EBML', () => {
       const data = fs.readFileSync('media/video-webm-codecs-vp8.webm');
 
       it('should get a correct PixelWidth value from a video/webm; codecs="vp8" file (2-byte unsigned int)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.PixelWidth) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.PixelWidth) {
             assert.strictEqual(tag.data, 352);
             done();
           }
@@ -147,9 +149,9 @@ describe('EBML', () => {
       });
 
       it('should get a correct EBMLVersion value from a video/webm; codecs="vp8" file (one-byte unsigned int)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.EBMLVersion) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.EBMLVersion) {
             assert.strictEqual(tag.data, 1);
             done();
           }
@@ -162,9 +164,9 @@ describe('EBML', () => {
       });
 
       it('should get a correct TimeCodeScale value from a video/webm; codecs="vp8" file (3-byte unsigned int)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.TimecodeScale) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.TimecodeScale) {
             assert.strictEqual(tag.data, 1000000);
             done();
           }
@@ -177,9 +179,9 @@ describe('EBML', () => {
       });
 
       it('should get a correct TrackUID value from a video/webm; codecs="vp8" file (56-bit integer in hex)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.TrackUID) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.TrackUID) {
             assert.strictEqual(tag.data, '306d02aaa74d06');
             done();
           }
@@ -192,9 +194,9 @@ describe('EBML', () => {
       });
 
       it('should get a correct DocType value from a video/webm; codecs="vp8" file (ASCII text)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.DocType) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.DocType) {
             assert.strictEqual(tag.data, 'webm');
             done();
           }
@@ -207,9 +209,9 @@ describe('EBML', () => {
       });
 
       it('should get a correct MuxingApp value from a video/webm; codecs="vp8" file (utf8 text)', done => {
-        const decoder = new EbmlDecoder();
-        decoder.on('data', (tag: EbmlTag) => {
-          if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.MuxingApp) {
+        const decoder = new EbmlStreamDecoder();
+        decoder.on('data', (tag: EbmlDataTag) => {
+          if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.MuxingApp) {
             assert.strictEqual(tag.data, 'Chrome');
             done();
           }
@@ -222,26 +224,26 @@ describe('EBML', () => {
       });
 
       it('should get a correct SimpleBlock time payload from a file (binary)', done => {
-        const decoder = new EbmlDecoder();
+        const decoder = new EbmlStreamDecoder();
         decoder.on(
           'data',
-          (tag: EbmlTag) => {
-            if (tag.position === EbmlTagPosition.Content && tag.type.id === EbmlTagId.SimpleBlock) {
-              let simpleBlockData = <SimpleBlockData>tag.data;
-              if (simpleBlockData.value > 0 && simpleBlockData.value < 100) {
-                assert.strictEqual(simpleBlockData.track, 1, 'track');
+          (tag: EbmlDataTag) => {
+            if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.SimpleBlock) {
+              let simpleBlock = <SimpleBlock>tag;
+              if (simpleBlock.value > 0 && simpleBlock.value < 100) {
+                assert.strictEqual(simpleBlock.track, 1, 'track');
                 assert.strictEqual(
-                  simpleBlockData.value,
+                  simpleBlock.value,
                   96,
                   JSON.stringify(tag),
                 );
                 /* look at second simpleBlock */
                 assert.strictEqual(
-                  simpleBlockData.payload.byteLength,
+                  simpleBlock.payload.byteLength,
                   43,
                   JSON.stringify(tag),
                 );
-                assert.strictEqual(simpleBlockData.discardable, false, 'discardable');
+                assert.strictEqual(simpleBlock.discardable, false, 'discardable');
                 done();
               }
             }

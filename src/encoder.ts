@@ -1,35 +1,33 @@
 import { Transform, TransformOptions, TransformCallback } from 'stream';
-import {Tools as tools} from './tools';
-import { Tag } from './types/tag.types';
 import { EbmlTag } from './models/EbmlTag';
 import { EbmlTagPosition } from './models/EbmlTagPosition';
-import { EbmlTagType } from './models/EbmlTagType';
 import { EbmlTagId } from './models/EbmlTagId';
+import { EbmlMasterTag } from './models/EbmlMasterTag';
 
-export class EbmlEncoder extends Transform {
+export class EbmlStreamEncoder extends Transform {
   private dataBuffer: Buffer = Buffer.alloc(0);
   private mCorked: boolean = false;
-  private openTags: OpenTag[] = [];
+  private openTags: EbmlMasterTag[] = [];
 
   constructor(options: TransformOptions = {}) {
     super({ ...options, writableObjectMode: true });
   }
 
   _transform(chunk: EbmlTag, enc: string, done: TransformCallback) {
-    if(chunk && chunk.type) {
-      if (!chunk.type.id) {
-        throw new Error(`No schema entry found for ${chunk}`);
+    if(chunk) {
+      if (!chunk.id) {
+        throw new Error(`No id found for ${JSON.stringify(chunk)}`);
       }
 
       switch (chunk.position) {
         case EbmlTagPosition.Start:
-          this.startTag(chunk);
+          this.startTag(<EbmlMasterTag>chunk);
           break;
         case EbmlTagPosition.Content:
           this.writeTag(chunk);
           break;
         case EbmlTagPosition.End:
-          this.endTag(chunk);
+          this.endTag(<EbmlMasterTag>chunk);
           break;
 
         default:
@@ -38,14 +36,6 @@ export class EbmlEncoder extends Transform {
     }
 
     done();
-  }
-
-  private getTagDeclaration(tag: EbmlTag): Buffer {
-    let tagHex = tag.type.id.toString(16);
-    if(tagHex.length%2!==0) {
-      tagHex = `0${tagHex}`;
-    }
-    return Buffer.from(tagHex, 'hex');
   }
 
   bufferAndFlush(buffer: Buffer) {
@@ -71,15 +61,13 @@ export class EbmlEncoder extends Transform {
   flush(): void {
     this._flush(() => {});
   }
-
   get buffer(): Buffer {
     return this.dataBuffer;
   }
   set buffer(val: Buffer) {
     this.dataBuffer = val;
   }
-
-  get stack(): OpenTag[] {
+  get stack(): EbmlMasterTag[] {
     return this.openTags;
   }
 
@@ -93,57 +81,28 @@ export class EbmlEncoder extends Transform {
   }
 
   writeTag(tag: EbmlTag): void {
-    const data = Buffer.concat([this.getTagDeclaration(tag), tools.writeContentForTag(tag)]);
     if (this.openTags.length > 0) {
-      let openTag: OpenTag = Object.assign(new OpenTag(), tag);
-      openTag.encodedContent = data;
-      this.openTags[this.openTags.length-1].children.push(openTag);
+      this.openTags[this.openTags.length-1].Children.push(tag);
     } else {
-      this.bufferAndFlush(data);
+      this.bufferAndFlush(tag.encode());
     }
   }
 
-  startTag(tag: EbmlTag): void {
-    let writeableTag = Object.assign(new OpenTag(), tag);
+  startTag(tag: EbmlMasterTag): void {
     if (this.openTags.length > 0) {
-      this.openTags[this.openTags.length - 1].children.push(writeableTag);
+      this.openTags[this.openTags.length - 1].Children.push(tag);
     }
-    this.openTags.push(writeableTag);
+    this.openTags.push(tag);
   }
 
-  endTag(tag: EbmlTag) {
-    const inMemoryTag: OpenTag = this.openTags.pop();
-    if(tag.type !== inMemoryTag.type) {
-      throw `Logic error - ${tag.type} is not ${inMemoryTag.type}`;
+  endTag(tag: EbmlMasterTag) {
+    const inMemoryTag = this.openTags.pop();
+    if(tag.id !== inMemoryTag.id) {
+      throw `Logic error - closing tag "${EbmlTagId[tag.id]}" is not expected tag "${EbmlTagId[inMemoryTag.id]}"`;
     }
-    let childData = Buffer.concat(inMemoryTag.children.map(child => child.encodedContent));
-    let vintSize = null;
-    if(inMemoryTag.size === -1) {
-      vintSize = Buffer.from('01ffffffffffffff', 'hex');
-    } else {
-      let specialLength: number = undefined;
-      if([
-        EbmlTagId.Segment,
-        EbmlTagId.Cluster
-      ].some(i => i === inMemoryTag.type.id)) {
-        specialLength = 8;
-      }
-      vintSize = tools.writeVint(childData.length, specialLength);
-    }
-
-    inMemoryTag.encodedContent = Buffer.concat([
-      this.getTagDeclaration(tag),
-      vintSize,
-      childData
-    ]);
 
     if (this.openTags.length < 1) {
-      this.bufferAndFlush(inMemoryTag.encodedContent);
+      this.bufferAndFlush(inMemoryTag.encode());
     }
   }
-}
-
-class OpenTag extends EbmlTag {
-  children: OpenTag[] = [];
-  encodedContent: Buffer;
 }

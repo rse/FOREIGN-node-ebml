@@ -1,50 +1,40 @@
 import assert from 'assert';
-import { EbmlEncoder as Encoder } from '../encoder';
+import { EbmlStreamEncoder as Encoder } from '../encoder';
 import "jasmine";
 import { EbmlTagId } from '../models/EbmlTagId';
 import { EbmlTag } from '../models/EbmlTag';
-import { AllEbmlTagTypes } from '../allEbmlTagTypes';
 import { EbmlTagPosition } from '../models/EbmlTagPosition';
+import { EbmlTagFactory } from '../models/EbmlTagFactory';
 
-const invalidTag = <EbmlTag>{
+const invalidTag = <EbmlTag><any>{
+  id: undefined,
   type: <any>'404NotFound',
   position: undefined,
   size: -1,
   data: null
 };
 
-const incompleteTag = <EbmlTag>{
-  type: AllEbmlTagTypes.get(EbmlTagId.EBML),
-  position: undefined,
-  size: -1,
-  data: null
-};
+const incompleteTag = undefined;
 
-const ebmlStartTag = <EbmlTag>{
-  type: AllEbmlTagTypes.get(EbmlTagId.EBML),
-  position: EbmlTagPosition.Start,
+const ebmlStartTag = Object.assign(EbmlTagFactory.create(EbmlTagId.EBML), {
   size: 10,
-  data: null
-};
+  position: EbmlTagPosition.Start
+});
 
-const ebmlEndTag = <EbmlTag>{
-  type: AllEbmlTagTypes.get(EbmlTagId.EBML),
-  position: EbmlTagPosition.End,
+const ebmlEndTag = Object.assign(EbmlTagFactory.create(EbmlTagId.EBML), {
   size: 10,
-  data: null
-};
+  position: EbmlTagPosition.End
+});
 
-const ebmlVersion1Tag = <EbmlTag>{
-  type: AllEbmlTagTypes.get(EbmlTagId.EBMLVersion),
+const ebmlVersion1Tag = Object.assign(EbmlTagFactory.create(EbmlTagId.EBMLVersion), {
   position: EbmlTagPosition.Content,
   data: 1
-};
+});
 
-const ebmlVersion0Tag = <EbmlTag>{
-  type: AllEbmlTagTypes.get(EbmlTagId.EBMLVersion),
+const ebmlVersion0Tag = Object.assign(EbmlTagFactory.create(EbmlTagId.EBMLVersion), {
   position: EbmlTagPosition.Content,
   data: 0
-};
+});
 
 describe('EBML', () => {
   describe('Encoder', () => {
@@ -122,7 +112,7 @@ describe('EBML', () => {
           () => {
             encoder.write(invalidTag);
           },
-          /No schema entry found/,
+          /No id found/,
           'Not throwing properly',
         );
       });
@@ -137,7 +127,7 @@ describe('EBML', () => {
           () => {
             encoder.write(invalidTag);
           },
-          /No schema entry found/,
+          /No id found/,
           'Not throwing properly',
         );
       });

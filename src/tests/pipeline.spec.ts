@@ -1,11 +1,16 @@
 import assert from 'assert';
-import { EbmlDecoder, EbmlEncoder } from '..';
+import { EbmlStreamDecoder } from '../decoder';
+import { EbmlStreamEncoder } from '../encoder';
+import { EbmlTag } from '../models/EbmlTag';
+import { EbmlTagId } from '../models/EbmlTagId';
+import { EbmlTagFactory } from '../models/EbmlTagFactory';
+import { EbmlTagPosition } from '../models/EbmlTagPosition';
 
 describe('ebml', () => {
   describe('Pipeline', () => {
     it('should output input buffer', done => {
-      const decoder = new EbmlDecoder();
-      const encoder = new EbmlEncoder();
+      const decoder = new EbmlStreamDecoder();
+      const encoder = new EbmlStreamEncoder();
       const buffer = Buffer.from([
         0x1a,
         0x45,
@@ -30,30 +35,26 @@ describe('ebml', () => {
     });
 
     it('should support end === -1', done => {
-      const decoder = new EbmlDecoder();
-      const encoder = new EbmlEncoder();
+      const decoder = new EbmlStreamDecoder();
+      const encoder = new EbmlStreamEncoder();
 
-      encoder.write([
-        'start',
-        {
-          name: 'Cluster',
-          start: 0,
-          end: -1,
-        },
-      ]);
-      encoder.write([
-        'end',
-        {
-          name: 'Cluster',
-          start: 0,
-          end: -1,
-        },
-      ]);
+      encoder.write(
+        Object.assign(EbmlTagFactory.create(EbmlTagId.Cluster), {
+          position: EbmlTagPosition.Start,
+          size: -1
+        })
+      );
+      encoder.write(
+        Object.assign(EbmlTagFactory.create(EbmlTagId.Cluster), {
+          position: EbmlTagPosition.End,
+          size: -1
+        })
+      );
 
-      encoder.pipe(decoder).on('data', data => {
-        assert.strictEqual(data[1].name, 'Cluster');
-        assert.strictEqual(data[1].start, 0);
-        assert.strictEqual(data[1].end, -1);
+      encoder.pipe(decoder).on('data', (tag: EbmlTag) => {
+        assert.strictEqual(tag.id, EbmlTagId.Cluster);
+        //assert.strictEqual(data[1].start, 0);
+        assert.strictEqual(tag.size, -1);
         done();
       });
       encoder.pipe(decoder).on('finish', done);

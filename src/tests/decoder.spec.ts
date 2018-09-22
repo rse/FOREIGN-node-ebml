@@ -1,9 +1,9 @@
 import assert from 'assert';
-import { EbmlDecoder as Decoder } from '../decoder';
+import { EbmlStreamDecoder as Decoder } from '../decoder';
 import "jasmine";
-import { EbmlTag } from '../models/EbmlTag';
 import { EbmlTagPosition } from '../models/EbmlTagPosition';
 import { EbmlElementType } from '../models/EbmlElementType';
+import { EbmlDataTag } from '../models/EbmlDataTag';
 
 describe('EBML', () => {
   describe('Decoder', () => {
@@ -52,12 +52,12 @@ describe('EBML', () => {
 
     it('should emit correct tag events for simple data', done => {
       const decoder = new Decoder();
-      decoder.on('data', (tag: EbmlTag) => {
+      decoder.on('data', (tag: EbmlDataTag) => {
         assert.strictEqual(tag.position, EbmlTagPosition.Content);
         //assert.strictEqual(tag, 0x286);
-        assert.strictEqual(tag.type.id.toString(16), '4286');
+        assert.strictEqual(tag.id.toString(16), '4286');
         assert.strictEqual(tag.size, 0x01);
-        assert.strictEqual(tag.type.dataType, EbmlElementType.UnsignedInt);
+        assert.strictEqual(tag.type, EbmlElementType.UnsignedInt);
         assert.deepStrictEqual(tag.data, 1);
         done();
         decoder.on('finish', done);
@@ -70,12 +70,12 @@ describe('EBML', () => {
     it('should emit correct EBML tag events for master tags', done => {
       const decoder = new Decoder();
 
-      decoder.on('data', (tag: EbmlTag) => {
+      decoder.on('data', (tag: EbmlDataTag) => {
         assert.strictEqual(tag.position, EbmlTagPosition.Start);
         //assert.strictEqual(tag, 0x0a45dfa3);
-        assert.strictEqual(tag.type.id.toString(16), '1a45dfa3');
+        assert.strictEqual(tag.id.toString(16), '1a45dfa3');
         assert.strictEqual(tag.size, 0);
-        assert.strictEqual(tag.type.dataType, EbmlElementType.Master);
+        assert.strictEqual(tag.type, EbmlElementType.Master);
         assert.strictEqual(tag.data, undefined); // eslint-disable-line no-undefined
         done();
         decoder.on('finish', done);
@@ -89,13 +89,13 @@ describe('EBML', () => {
     it('should emit correct EBML:end events for master tags', done => {
       const decoder = new Decoder();
       let tags = 0;
-      decoder.on('data', (tag: EbmlTag) => {
+      decoder.on('data', (tag: EbmlDataTag) => {
         if (tag.position === EbmlTagPosition.End) {
           assert.strictEqual(tags, 2); // two tags
           //assert.strictEqual(data.tag, 0x0a45dfa3);
-          assert.strictEqual(tag.type.id.toString(16), '1a45dfa3');
+          assert.strictEqual(tag.id.toString(16), '1a45dfa3');
           assert.strictEqual(tag.size, 4);
-          assert.strictEqual(tag.type.dataType, EbmlElementType.Master);
+          assert.strictEqual(tag.type, EbmlElementType.Master);
           assert.strictEqual(tag.data, undefined); // eslint-disable-line no-undefined
           done();
           decoder.on('finish', done);

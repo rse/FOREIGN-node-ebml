@@ -220,7 +220,7 @@ export enum EbmlTagId {
     SignatureHash = 0x7e9a,
     SignatureAlgo = 0x7e8a,
     SignatureSlot = 0x1b538667,
-    'CRC-32' = 0xbf,
+    CRC32 = 0xbf,
     Void = 0xec,
     EBMLMaxSizeLength = 0x42f3,
     EBMLMaxIDLength = 0x42f2,

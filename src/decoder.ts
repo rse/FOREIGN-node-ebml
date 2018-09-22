@@ -1,13 +1,11 @@
 import { Transform, TransformOptions, TransformCallback } from 'stream';
 import { Tools as tools } from './tools';
-import { AllEbmlTagTypes } from './allEbmlTagTypes';
-import { EbmlTagType } from './models/EbmlTagType';
 import { EbmlTag } from './models/EbmlTag';
 import { EbmlElementType } from './models/EbmlElementType';
 import { EbmlTagPosition } from './models/EbmlTagPosition';
-import { EbmlTagId } from './models/EbmlTagId';
+import { EbmlTagFactory } from './models/EbmlTagFactory';
 
-export class EbmlDecoder extends Transform {
+export class EbmlStreamDecoder extends Transform {
   private _currentBufferOffset: number = 0;
   private _tagStack: ProcessingTag[] = [];
   private _buffer: Buffer = Buffer.alloc(0);
@@ -27,70 +25,32 @@ export class EbmlDecoder extends Transform {
     done();
   }
 
-  private getTagType(tag: number): EbmlTagType {
-    if (Number.isInteger(tag) && AllEbmlTagTypes.has(tag)) {
-      return AllEbmlTagTypes.get(tag);
-    }
-
-    return <EbmlTagType>{
-      id: undefined,
-      dataType: undefined,
-      level: undefined,
-      minver: undefined,
-      description: undefined
-    };
-  }
-
   private parseTags(): boolean {
     const currentTag = this.readTagHeader(this._buffer);
     if(!currentTag) {
       return false;
     }
 
-    if(currentTag.tagType.dataType === EbmlElementType.Master) {
-      this._tagStack.push({
-        type: currentTag.tagType,
-        absoluteStart: this._currentBufferOffset,
-        contentSize: currentTag.tagSize,
-        headerSize: currentTag.tagHeaderLength
-      });
-      this.push(<EbmlTag>{
-        type: currentTag.tagType,
-        position: EbmlTagPosition.Start,
-        size: currentTag.tagSize
-      });
+    if(currentTag.type === EbmlElementType.Master) {
+      this._tagStack.push(currentTag);
+      this.emitTag(currentTag, EbmlTagPosition.Start);
       this.advanceBuffer(currentTag.tagHeaderLength);
-
       return true;
     } else {
-      if(this._buffer.length < currentTag.tagHeaderLength + currentTag.tagSize) {
+      if(this._buffer.length < currentTag.tagHeaderLength + currentTag.size) {
         return false;
       }
 
-      const data = this._buffer.slice(currentTag.tagHeaderLength, currentTag.tagHeaderLength+ currentTag.tagSize);
-      this.advanceBuffer(currentTag.tagHeaderLength + currentTag.tagSize);
-      
-      this.push(<EbmlTag>{
-        type: currentTag.tagType,
-        position: EbmlTagPosition.Content,
-        size: currentTag.tagSize,
-        data: tools.readDataFromTag(
-          currentTag.tagType,
-          Buffer.from(data)
-        )
-      });
-      
+      const data = this._buffer.slice(currentTag.tagHeaderLength, currentTag.tagHeaderLength+ currentTag.size);
+      this.emitTag(currentTag, EbmlTagPosition.Content, data);
+      this.advanceBuffer(currentTag.tagHeaderLength + currentTag.size);
+
       while (this._tagStack.length > 0) {
         const nextTag = this._tagStack[this._tagStack.length - 1];
-        if (this._currentBufferOffset < (nextTag.absoluteStart + nextTag.headerSize + nextTag.contentSize)) {
+        if (this._currentBufferOffset < (nextTag.absoluteStart + nextTag.tagHeaderLength + nextTag.size)) {
           break;
         }
-
-        this.push(<EbmlTag>{
-          type: nextTag.type,
-          position: EbmlTagPosition.End,
-          size: nextTag.contentSize
-        });
+        this.emitTag(nextTag, EbmlTagPosition.End);
         this._tagStack.pop();
       }
     }
@@ -103,7 +63,7 @@ export class EbmlDecoder extends Transform {
       this._buffer = this._buffer.slice(length);
   }
 
-  private readTagHeader(buffer: Buffer, offset: number = 0): EbmlTagHeader {
+  private readTagHeader(buffer: Buffer, offset: number = 0): ProcessingTag {
     if (buffer.length == 0) {
       return null;
     }
@@ -115,28 +75,32 @@ export class EbmlDecoder extends Transform {
     if(size == null) {
       return null;
     }
-    
-    const tagId = tools.readHexString(buffer, 0, tag.length);
-    const tagType = this.getTagType(Number.parseInt(tagId, 16));
 
-    return {
-      tagType: tagType,
-      tagSize: size.value,
+    const tagIdHex = tools.readHexString(buffer, 0, tag.length)
+    const tagId = Number.parseInt(tagIdHex, 16);
+    let tagObject = EbmlTagFactory.create(tagId);
+
+    tagObject.size = size.value;
+    
+    return Object.assign(tagObject, {
+      absoluteStart: this._currentBufferOffset,
       tagHeaderLength: tag.length + size.length
-    };
+    });
+  }
+
+  private emitTag(tag: ProcessingTag, position: EbmlTagPosition, data?: Buffer): void {
+    let emittedTag = EbmlTagFactory.create(tag.id);
+    emittedTag.size = tag.size;
+    emittedTag.position = position;
+    if(position === EbmlTagPosition.Content) {
+      emittedTag.parseContent(data);
+    }
+    this.push(emittedTag);
   }
 
 }
 
-class EbmlTagHeader {
-  tagType: EbmlTagType;
-  tagSize: number;
-  tagHeaderLength: number;
-}
-
-class ProcessingTag {
-  type: EbmlTagType;
+type ProcessingTag = EbmlTag & {
   absoluteStart: number;
-  headerSize: number;
-  contentSize: number;
-}
+  tagHeaderLength: number;
+};
