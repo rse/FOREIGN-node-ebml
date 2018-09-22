@@ -1,26 +1,25 @@
 {
-  "name": "fixed-ebml",
-  "version": "3.0.0",
-  "description": "ebml parser",
+  "name": "ebml-stream",
+  "version": "1.0.0",
+  "description": "Ebml parser and encoder",
   "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "maintainers": [
-    "Jonathan Sifuentes <jayands.dev@gmail.com>",
-    "Mark Schmale <masch@masch.it>"
+    "Austin Blake <austin.leroy@hotmail.com>"
   ],
   "directories": {
-    "test": "__test__",
     "lib": "lib"
   },
   "scripts": {
-    "test": "jasmine",
+    "pretest": "tsc --project tsconfig.test.json",
+    "test": "ts-node node_modules/jasmine/bin/jasmine",
     "build": "tsc",
-    "prepublish": "check-node-version --npm \">=4\" || npm run prepare",
-    "prepare": "npm run build",
+    "prepublish": "npm run build",
     "prepublishOnly": "NODE_ENV=production npm run build"
   },
   "repository": "github:austinleroy/node-ebml",
   "engines": {
-    "node": ">= 6.4"
+    "node": ">= 10.10.0"
   },
   "keywords": [
     "ebml",
@@ -35,10 +34,11 @@
     "@types/node": "^10.10.1",
     "jasmine": "^3.2.0",
     "rimraf": "^2.6.2",
+    "ts-node": "^7.0.1",
     "typescript": "^3.0.3"
   },
-  "types": "./lib/index.d.ts",
   "contributors": [
+    "Austin Blake <austin.leroy@hotmail.com>",
     "Chris Price <price.c@gmail.com>",
     "Davy Van Deursen <d.vandeursen@evs.com>",
     "Ed Markowski <siphon@protonmail.com>",
@@ -51,7 +51,7 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/node-ebml/node-ebml/issues"
+    "url": "https://github.com/austinleroy/node-ebml/issues"
   },
-  "homepage": "https://github.com/node-ebml/node-ebml#readme"
+  "homepage": "https://github.com/austinleroy/node-ebml#readme"
 }

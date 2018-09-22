@@ -1,5 +1,5 @@
 import { Transform, TransformOptions, TransformCallback } from 'stream';
-import { Tools as tools } from './tools';
+import { Tools as tools } from './Tools';
 import { EbmlTag } from './models/EbmlTag';
 import { EbmlElementType } from './models/enums/EbmlElementType';
 import { EbmlTagPosition } from './models/enums/EbmlTagPosition';
@@ -18,7 +18,7 @@ export class EbmlStreamDecoder extends Transform {
   constructor(options: TransformOptions = {}) {
     super({ ...options, readableObjectMode: true });
   }
-
+// @ts-ignore
   _transform(chunk: any, enc: string, done: TransformCallback): void {
     this._buffer = Buffer.concat([this._buffer, Buffer.from(chunk)]);
     while(this.parseTags());
@@ -67,23 +67,23 @@ export class EbmlStreamDecoder extends Transform {
     if (buffer.length == 0) {
       return null;
     }
-    const tag = tools.readVint(buffer);
+    const tag = tools.readVint(buffer, offset);
     if (tag == null) {
       return null;
     }
-    const size = tools.readVint(buffer, tag.length);
+    const size = tools.readVint(buffer, offset + tag.length);
     if(size == null) {
       return null;
     }
 
-    const tagIdHex = tools.readHexString(buffer, 0, tag.length)
+    const tagIdHex = tools.readHexString(buffer, offset, tag.length)
     const tagId = Number.parseInt(tagIdHex, 16);
     let tagObject = EbmlTagFactory.create(tagId);
 
     tagObject.size = size.value;
     
     return Object.assign(tagObject, {
-      absoluteStart: this._currentBufferOffset,
+      absoluteStart: this._currentBufferOffset + offset,
       tagHeaderLength: tag.length + size.length
     });
   }

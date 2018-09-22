@@ -1,11 +1,11 @@
 import assert from 'assert';
-import { Tools as tools } from '../tools';
+import { Tools as tools } from '../src/Tools';
 import "jasmine";
 
 describe('EBML', () => {
   describe('tools', () => {
     describe('#readVint()', () => {
-      function readVint(buffer, expected) {
+      function readVint(buffer: Buffer, expected: number): void {
         const vint = tools.readVint(buffer, 0);
         assert.strictEqual(vint.value, expected);
         assert.strictEqual(vint.length, buffer.length);
@@ -98,7 +98,7 @@ describe('EBML', () => {
       });
     });
     describe('#writeVint()', () => {
-      function writeVint(value, expected) {
+      function writeVint(value: number, expected: Buffer): void {
         const actual = tools.writeVint(value);
         assert.strictEqual(expected.toString('hex'), actual.toString('hex'));
       }

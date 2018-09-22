@@ -12,7 +12,7 @@ export class EbmlStreamEncoder extends Transform {
   constructor(options: TransformOptions = {}) {
     super({ ...options, writableObjectMode: true });
   }
-
+// @ts-ignore
   _transform(chunk: EbmlTag, enc: string, done: TransformCallback) {
     if(chunk) {
       if (!chunk.id) {
@@ -54,7 +54,7 @@ export class EbmlStreamEncoder extends Transform {
   }
 
   /* For testing */
-  _bufferAndFlush(buffer) {
+  _bufferAndFlush(buffer: Buffer) {
     this.bufferAndFlush(buffer);
   }
 

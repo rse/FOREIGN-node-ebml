@@ -1,5 +1,5 @@
 export class Tools {
-  static readVint(buffer: Buffer, start: number = 0): {length: number, value: number} {
+  static readVint(buffer: Buffer | Uint8Array, start: number = 0): {length: number, value: number} {
     const length = 8 - Math.floor(Math.log2(buffer[start]));
     if (length > 8) {
       const number = Tools.readHexString(buffer, start, start + length);
@@ -71,25 +71,13 @@ export class Tools {
     return val;
   }
 
-  /**
-   * get a hex text string from Buff[start,end)
-   * @param {Buffer} buff from which to read the string
-   * @param {Number} [start=0] starting point (default 0)
-   * @param {Number} [end=buff.byteLength] ending point (default the whole buffer)
-   * @returns {string} the hex string
-   */
-  static readHexString(buff, start = 0, end = buff.byteLength) {
+  static readHexString(buff: Buffer | Uint8Array, start: number = 0, end: number = buff.byteLength): string {
     return Array.from(buff.subarray(start, end))
       .map(q => Number(q).toString(16))
       .reduce((acc, current) => `${acc}${this.padStart(current)}`, '');
   }
 
-  /**
-   * tries to read out a UTF-8 encoded string
-   * @param  {Buffer} buff the buffer to attempt to read from
-   * @return {string|null}      the decoded text, or null if unable to
-   */
-  static readUtf8(buff) {
+  static readUtf8(buff: Buffer | Uint8Array): string {
     try {
       return Buffer.from(buff).toString('utf8');
     } catch (exception) {
@@ -97,12 +85,7 @@ export class Tools {
     }
   }
 
-  /**
-   * get an unsigned number from a buffer
-   * @param {Buffer} buff from which to read variable-length unsigned number
-   * @returns {number|string} result (in hex for lengths > 6)
-   */
-  static readUnsigned(buff: Buffer): number | string {
+  static readUnsigned(buff: Buffer | Uint8Array): number | string {
     const b = new DataView(buff.buffer, buff.byteOffset, buff.byteLength);
     switch (buff.byteLength) {
       case 1:
@@ -139,13 +122,7 @@ export class Tools {
     }
   }
 
-  /**
-   * get an signed number from a buffer
-   * @static
-   * @param {Buffer} buff from which to read variable-length signed number
-   * @returns {number} result
-   */
-  static readSigned(buff) {
+  static readSigned(buff: Buffer | Uint8Array): number {
     const b = new DataView(buff.buffer, buff.byteOffset, buff.byteLength);
     switch (buff.byteLength) {
       case 1:
@@ -165,13 +142,7 @@ export class Tools {
     return buf;
   }
 
-  /**
-   * get an floating-point number from a buffer
-   * @static
-   * @param {Buffer} buff from which to read variable-length floating-point number
-   * @returns {number} result
-   */
-  static readFloat(buff: Buffer) {
+  static readFloat(buff: Buffer | Uint8Array): number {
     const b = new DataView(buff.buffer, buff.byteOffset, buff.byteLength);
     switch (buff.byteLength) {
       case 4:

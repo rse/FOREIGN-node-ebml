@@ -1,10 +1,10 @@
 import assert from 'assert';
-import { EbmlStreamDecoder } from '../EbmlStreamDecoder';
-import { EbmlStreamEncoder } from '../EbmlStreamEncoder';
-import { EbmlTag } from '../models/EbmlTag';
-import { EbmlTagId } from '../models/enums/EbmlTagId';
-import { EbmlTagFactory } from '../models/EbmlTagFactory';
-import { EbmlTagPosition } from '../models/enums/EbmlTagPosition';
+import { EbmlStreamDecoder } from '../src/EbmlStreamDecoder';
+import { EbmlStreamEncoder } from '../src/EbmlStreamEncoder';
+import { EbmlTag } from '../src/models/EbmlTag';
+import { EbmlTagId } from '../src/models/enums/EbmlTagId';
+import { EbmlTagFactory } from '../src/models/EbmlTagFactory';
+import { EbmlTagPosition } from '../src/models/enums/EbmlTagPosition';
 
 describe('ebml', () => {
   describe('Pipeline', () => {

@@ -1,11 +1,11 @@
 import fs from 'fs';
 import assert from 'assert';
-import { EbmlStreamDecoder } from '../EbmlStreamDecoder';
-import { EbmlTagPosition } from '../models/enums/EbmlTagPosition';
-import { EbmlTagId } from '../models/enums/EbmlTagId';
-import { EbmlDataTag } from '../models/tags/EbmlDataTag';
-import { SimpleBlock } from '../models/tags/SimpleBlock';
-import { EbmlTag } from '../models/EbmlTag';
+import { EbmlStreamDecoder } from '../src/EbmlStreamDecoder';
+import { EbmlTagPosition } from '../src/models/enums/EbmlTagPosition';
+import { EbmlTagId } from '../src/models/enums/EbmlTagId';
+import { EbmlDataTag } from '../src/models/tags/EbmlDataTag';
+import { SimpleBlock } from '../src/models/tags/SimpleBlock';
+import { EbmlTag } from '../src/models/EbmlTag';
 
 process.setMaxListeners(Infinity);
 

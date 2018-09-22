@@ -1,28 +1,6 @@
-# ignore the src and test folders for publishing; work should be done through
-# the github repo
+# Development/test files
 
 src/
 test/
-__test__/
-
-# more development files
-
-*.config.js
-*.tgz
-.atom/
-.editorconfig
-.env
-.env.example
-.eslintignore
-.eslintrc.js
-.flowconfig
-.nyc_output/
-.prettierrc
-.travis.yml
-coverage/
-flow-typed/
-media/*
-tmp/
-yarn.lock
-!media/test.webm
-.yarnclean
+spec/
+media/
