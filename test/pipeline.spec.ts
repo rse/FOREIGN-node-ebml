@@ -5,6 +5,8 @@ import { EbmlTag } from '../src/models/EbmlTag';
 import { EbmlTagId } from '../src/models/enums/EbmlTagId';
 import { EbmlTagFactory } from '../src/models/EbmlTagFactory';
 import { EbmlTagPosition } from '../src/models/enums/EbmlTagPosition';
+import "jasmine";
+import { Block } from '../src/models/tags/Block';
 
 describe('ebml', () => {
   describe('Pipeline', () => {
@@ -60,5 +62,34 @@ describe('ebml', () => {
       encoder.pipe(decoder).on('finish', done);
       encoder.end();
     });
+
+    it('should encode and decode Blocks correctly', (done) => {
+      const decoder = new EbmlStreamDecoder();
+      const encoder = new EbmlStreamEncoder();
+
+      let block = EbmlTagFactory.create(EbmlTagId.Block);
+      block.track = 5;
+      block.invisible = true;
+      block.payload = Buffer.alloc(50);
+      for(let i = 0; i < block.payload.length; i++) {
+        block.payload[i] = Math.floor(Math.random()*255);
+      }
+
+      encoder.write(
+        block
+      );
+
+      encoder.pipe(decoder).on('data', (tag: Block) => {
+        if(tag) {
+          assert.strictEqual(tag.id, EbmlTagId.Block);
+          assert.strictEqual(tag.track, block.track);
+          assert.strictEqual(tag.invisible, block.invisible);
+          assert.strictEqual(tag.payload.toString('hex'), block.payload.toString('hex'));
+          done();
+        }
+      });
+      encoder.pipe(decoder).on('finish', done);
+      encoder.end();
+    })
   });
 });
