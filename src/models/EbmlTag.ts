@@ -18,11 +18,11 @@ export abstract class EbmlTag {
     ) {
     }
 
-    abstract encodeContent(): Buffer;
+    protected abstract encodeContent(): Buffer;
 
-    abstract parseContent(content: Buffer): void;
+    public abstract parseContent(content: Buffer): void;
 
-    protected getTagDeclaration(): Buffer {
+    private getTagDeclaration(): Buffer {
         let tagHex = this.id.toString(16);
         if(tagHex.length%2!==0) {
             tagHex = `0${tagHex}`;

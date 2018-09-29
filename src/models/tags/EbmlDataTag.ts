@@ -28,7 +28,7 @@ export class EbmlDataTag extends EbmlTag {
             case EbmlElementType.String:
                 this.data = String.fromCharCode(...data);
                 break
-            case EbmlElementType["Utf-8"]:
+            case EbmlElementType.UTF8:
                 this.data = Tools.readUtf8(data);
                 break;
             default:
@@ -47,7 +47,7 @@ export class EbmlDataTag extends EbmlTag {
             return Tools.writeSigned(<number>this.data);
         case EbmlElementType.String:
             return Buffer.from(<string>this.data, "ascii");
-        case EbmlElementType["Utf-8"]:
+        case EbmlElementType.UTF8:
             return Buffer.from(<string>this.data, "utf8");
         case EbmlElementType.Binary:
         default:

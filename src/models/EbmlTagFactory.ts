@@ -442,7 +442,7 @@ export class EbmlTagFactory {
                 case EbmlTagId.Title:
                 case EbmlTagId.NextFilename:
                 case EbmlTagId.PrevFilename:
-                    foundType = EbmlElementType["Utf-8"];
+                    foundType = EbmlElementType.UTF8;
                     break;
                 case EbmlTagId.ContentCompSettings:
                 case EbmlTagId.SegmentFamily:
@@ -502,7 +502,7 @@ export class EbmlTagFactory {
         switch(type) {
             case EbmlElementType.Master:
                 return new EbmlMasterTag(id);
-            case EbmlElementType["Utf-8"]:
+            case EbmlElementType.UTF8:
             case EbmlElementType.Binary:
             case EbmlElementType.Date:
             case EbmlElementType.Float:

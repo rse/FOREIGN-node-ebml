@@ -4,19 +4,26 @@ import { EbmlTag } from './models/EbmlTag';
 import { EbmlElementType } from './models/enums/EbmlElementType';
 import { EbmlTagPosition } from './models/enums/EbmlTagPosition';
 import { EbmlTagFactory } from './models/EbmlTagFactory';
+import { EbmlTagId } from './models/enums/EbmlTagId';
+
+export class EbmlStreamDecoderOptions {
+  bufferTagIds?: EbmlTagId[] = [];
+}
 
 export class EbmlStreamDecoder extends Transform {
   private _currentBufferOffset: number = 0;
   private _tagStack: ProcessingTag[] = [];
   private _buffer: Buffer = Buffer.alloc(0);
+  private _bufferTagIds: EbmlTagId[] = [];
 
   /* Expose property for testing */
   get buffer(): Buffer {
     return this._buffer;
   }
 
-  constructor(options: TransformOptions = {}) {
-    super({ ...options, readableObjectMode: true });
+  constructor(options: TransformOptions & EbmlStreamDecoderOptions = {}) {
+    super(<TransformOptions>{ ...options, readableObjectMode: true });
+    this._bufferTagIds = options.bufferTagIds || [];
   }
 // @ts-ignore
   _transform(chunk: any, enc: string, done: TransformCallback): void {
@@ -31,7 +38,7 @@ export class EbmlStreamDecoder extends Transform {
       return false;
     }
 
-    if(currentTag.type === EbmlElementType.Master) {
+    if(currentTag.type === EbmlElementType.Master && !this._bufferTagIds.some(i => i ===currentTag.id)) {
       this._tagStack.push(currentTag);
       this.emitTag(currentTag, EbmlTagPosition.Start);
       this.advanceBuffer(currentTag.tagHeaderLength);
@@ -76,7 +83,7 @@ export class EbmlStreamDecoder extends Transform {
       return null;
     }
 
-    const tagIdHex = tools.readHexString(buffer, offset, tag.length)
+    const tagIdHex = tools.readHexString(buffer, offset, offset + tag.length)
     const tagId = Number.parseInt(tagIdHex, 16);
     let tagObject = EbmlTagFactory.create(tagId);
 
