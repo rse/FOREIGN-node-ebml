@@ -103,7 +103,7 @@ export class Tools {
 
     var hex = Tools.readHexString(buff, 0, buff.byteLength);
     var num = parseInt(hex, 16);
-    if(num <= Number.MAX_SAFE_INTEGER) {
+    if(num <= Math.pow(256, 6)) {
       return num;
     }
     return hex;

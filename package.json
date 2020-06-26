@@ -1,6 +1,6 @@
 {
   "name": "ebml-stream",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Ebml parser and encoder",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
