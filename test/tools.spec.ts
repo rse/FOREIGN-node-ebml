@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { Tools as tools } from '../src/Tools';
+import { Tools as tools } from '../src/tools';
 import "jasmine";
 
 describe('EBML', () => {
@@ -225,16 +225,16 @@ describe('EBML', () => {
           7726764066567,
         );
       });
-      it('returns ints 49 bits or larger as strings', () => {
+      it('returns ints larger than the max safe number size as strings', () => {
         assert.strictEqual(
           tools.readUnsigned(
-            Buffer.from([0x1, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07]),
+            Buffer.from([0x1, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07]),
           ),
-          '01070707070707',
+          '0107070707070707',
         );
         assert.strictEqual(
           typeof tools.readUnsigned(
-            Buffer.from([0x1, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07]),
+            Buffer.from([0x1, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07]),
           ),
           'string',
         );

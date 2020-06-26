@@ -1,4 +1,4 @@
-import { Tools } from "../../Tools";
+import { Tools } from "../../tools";
 import { Block } from "./Block";
 import { EbmlTagId } from "../enums/EbmlTagId";
 

@@ -63,7 +63,7 @@ describe('EBML', () => {
         const decoder = new EbmlStreamDecoder();
         decoder.on('data', (tag: EbmlDataTag) => {
           if (tag.position === EbmlTagPosition.Content && tag.id === EbmlTagId.TrackUID) {
-            assert.strictEqual(tag.data, '1c63824e507a46');
+            assert.strictEqual(tag.data, parseInt('1c63824e507a46', 16));
             done();
           }
         });

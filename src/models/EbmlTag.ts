@@ -1,7 +1,7 @@
 import { EbmlTagPosition } from "./enums/EbmlTagPosition";
 import { EbmlTagId } from "./enums/EbmlTagId";
 import { EbmlElementType } from "./enums/EbmlElementType";
-import { Tools } from "../Tools";
+import { Tools } from "../tools";
 
 export abstract class EbmlTag {
     

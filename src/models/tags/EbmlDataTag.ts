@@ -1,6 +1,6 @@
 import { EbmlTag } from "../EbmlTag";
 import { EbmlElementType } from "../enums/EbmlElementType";
-import { Tools } from "../../Tools";
+import { Tools } from "../../tools";
 import { EbmlTagPosition } from "../enums/EbmlTagPosition";
 
 export class EbmlDataTag extends EbmlTag {

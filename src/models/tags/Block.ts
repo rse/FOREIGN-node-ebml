@@ -1,6 +1,6 @@
 import { EbmlDataTag } from "./EbmlDataTag";
 import { BlockLacing } from "../enums/BlockLacing";
-import { Tools } from "../../Tools";
+import { Tools } from "../../tools";
 import { EbmlTagId } from "../enums/EbmlTagId";
 import { EbmlElementType } from "../enums/EbmlElementType";
 

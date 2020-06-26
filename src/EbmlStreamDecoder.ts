@@ -1,5 +1,5 @@
 import { Transform, TransformOptions, TransformCallback } from 'stream';
-import { Tools as tools } from './Tools';
+import { Tools as tools } from './tools';
 import { EbmlTag } from './models/EbmlTag';
 import { EbmlElementType } from './models/enums/EbmlElementType';
 import { EbmlTagPosition } from './models/enums/EbmlTagPosition';

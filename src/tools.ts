@@ -101,7 +101,12 @@ export class Tools {
       return buff.reduce((acc, current) => acc * 256 + current, 0);
     }
 
-    return Tools.readHexString(buff, 0, buff.byteLength);
+    var hex = Tools.readHexString(buff, 0, buff.byteLength);
+    var num = parseInt(hex, 16);
+    if(num <= Number.MAX_SAFE_INTEGER) {
+      return num;
+    }
+    return hex;
   }
 
   static writeUnsigned(num: number | string): Buffer {
