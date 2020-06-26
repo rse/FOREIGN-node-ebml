@@ -110,20 +110,18 @@ export class Tools {
   }
 
   static writeUnsigned(num: number | string): Buffer {
-    //TODO improve this
     if(typeof num === 'string') {
       return Buffer.from(num, 'hex');
     } else {
-      //Any larger numbers should be passed as hexadecimal
-      var buf = Buffer.alloc(4);
-      buf.fill(0);
-      buf.writeUInt32BE(num, 0);
-      let firstValueIndex = buf.findIndex(b => b !== 0);
-      if(firstValueIndex === -1) {
-        firstValueIndex = buf.length - 1;
-      }
-      let ret = buf.slice(firstValueIndex);
-      return ret;
+        var buf = Buffer.alloc(6);
+        buf.fill(0);
+        buf.writeUIntBE(num, 0, 6);
+        let firstValueIndex = buf.findIndex(b => b !== 0);
+        if(firstValueIndex === -1) {
+          firstValueIndex = buf.length - 1;
+        }
+        let ret = buf.slice(firstValueIndex);
+        return ret;
     }
   }
 
