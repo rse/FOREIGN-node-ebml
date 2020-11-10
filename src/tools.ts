@@ -2,6 +2,7 @@ export class Tools {
   static readVint(buffer: Buffer | Uint8Array, start: number = 0): {length: number, value: number} {
     const length = 8 - Math.floor(Math.log2(buffer[start]));
     if (length > 8) {
+      if (length === Infinity) throw new Error(`Unrepresentable length: ${length}`);
       const number = Tools.readHexString(buffer, start, start + length);
       throw new Error(`Unrepresentable length: ${length} ${number}`);
     }
