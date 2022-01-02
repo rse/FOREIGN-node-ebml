@@ -22,7 +22,7 @@ was converted to use Typescript and to provide a uniform API for
 decoding and encoding EBML.
 
 The extenstion of Dr. Ralf S. Engelschall was made to add the dumping of
-EBML as XML in order to simplify the debugging of EBML streams.
+EBML as XML (via `EbmlTag::dump()`) in order to simplify the debugging of EBML streams.
 
 # Install
 
