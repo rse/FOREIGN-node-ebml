@@ -252,6 +252,7 @@ If any well-known tags have special parsing/encoding rules or data structures th
 * [Max Ogden](https://github.com/maxogden)
 * [Oliver Jones](https://github.com/OllieJones)
 * [Oliver Walzer](https://github.com/owcd)
+* [Ralf S. Engelschall](https://github.com/rse)
 
 [EBML]: http://ebml.sourceforge.net/
 [EBML Specification IETF Source]: https://github.com/ietf-wg-cellar/ebml-specification
