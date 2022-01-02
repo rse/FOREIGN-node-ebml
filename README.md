@@ -1,10 +1,28 @@
+
 [EBML][EBML] stands for Extensible Binary Meta-Language and is somewhat of a
 binary version of XML. It's used for container formats like [WebM][webm] or
 [MKV][mkv].
 
+The specification of EBML ca be found in the
+[EBML Specification IETF Source][EBML Specification IETF Source]
+and the resulting [EBML Specification IETF RFC][EBML Specification IETF RFC].
+
 ## Note
 
-This library was rewritten from version `3.0.0` of the existing [npm ebml][npm-ebml] package.  The rewrite was performed mainly to enable modification of tags during streaming. (At the time of this writing, the referenced library required a deep understanding of both the inner workings of the package and ebml to update the required properties correctly between decoding and encoding binary data).  As part of the rewrite, the project was converted to use Typescript and to provide a uniform API for decoding and encoding EBML.
+This is Dr. Ralf S. Engelschall's [npm @rse/ebml-stream][npm-rse-ebml-stream]
+extension fork of Austin Blake's [npm ebml-stream][npm-ebml-stream] package, which itself
+was rewritten from version `3.0.0` of the existing [npm ebml][npm-ebml] package.
+
+The rewrite by Austin Blake was performed mainly to enable modification
+of tags during streaming. (At the time of this writing, the referenced
+library required a deep understanding of both the inner workings of the
+package and ebml to update the required properties correctly between
+decoding and encoding binary data). As part of the rewrite, the project
+was converted to use Typescript and to provide a uniform API for
+decoding and encoding EBML.
+
+The extenstion of Dr. Ralf S. Engelschall was made to add the dumping of
+EBML as XML in order to simplify the debugging of EBML streams.
 
 # Install
 
@@ -236,7 +254,11 @@ If any well-known tags have special parsing/encoding rules or data structures th
 * [Oliver Walzer](https://github.com/owcd)
 
 [EBML]: http://ebml.sourceforge.net/
+[EBML Specification IETF Source]: https://github.com/ietf-wg-cellar/ebml-specification
+[EBML Specification IETF RFC]: https://datatracker.ietf.org/doc/html/rfc8794
 [npm-ebml]: https://www.npmjs.com/package/ebml
+[npm-ebml-stream]: https://www.npmjs.com/package/ebml-stream
+[npm-rse-ebml-stream]: https://www.npmjs.com/package/@rse/ebml-stream
 [new-issue]: https://github.com/austinleroy/ebml-stream/issues/new
 [MDN-Uint8Array]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
 [node-stream-pipe]: https://nodejs.org/api/stream.html#stream_choose_one_api_style
