@@ -1,5 +1,6 @@
 import { EbmlTag } from "../EbmlTag";
-import { EbmlElementType } from "../enums/EbmlElementType";
+import { EbmlTagId2Name } from "../enums/EbmlTagId";
+import { EbmlElementType, EbmlElementType2Name } from "../enums/EbmlElementType";
 import { Tools } from "../../tools";
 import { EbmlTagPosition } from "../enums/EbmlTagPosition";
 
@@ -53,5 +54,16 @@ export class EbmlDataTag extends EbmlTag {
         default:
             return <Buffer>this.data;
         }
+    }
+
+    dumpContent(): String {
+        const tag = EbmlTagId2Name["0x" + this.id.toString(16)];
+        let dump = `<${tag} type="${EbmlElementType2Name[this.type]}" `;
+        if (this.type === EbmlElementType.Binary)
+            dump += `data-length="${this.data.length}" data="${this.data.toString("hex")}"`;
+        else
+            dump += `data="${this.data}"`;
+        dump += "/>";
+        return dump;
     }
 }

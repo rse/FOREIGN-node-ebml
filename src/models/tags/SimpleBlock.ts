@@ -1,6 +1,8 @@
 import { Tools } from "../../tools";
 import { Block } from "./Block";
-import { EbmlTagId } from "../enums/EbmlTagId";
+import { EbmlTagId, EbmlTagId2Name } from "../enums/EbmlTagId";
+import { EbmlElementType2Name } from "../enums/EbmlElementType";
+import { BlockLacing2Name } from "../enums/BlockLacing";
 
 export class SimpleBlock extends Block {
 
@@ -27,6 +29,16 @@ export class SimpleBlock extends Block {
             flags,
             this.payload
         ]);
+    }
+
+    dumpContent(): String {
+        const tag = EbmlTagId2Name["0x" + this.id.toString(16)];
+        const dump = `<${tag} type="${EbmlElementType2Name[this.type]}" ` +
+            `track="${this.track}" value="${this.value}" ` +
+            `invisible="${this.invisible}" lacing="${BlockLacing2Name[this.lacing]}" ` +
+            `keyframe="${this.keyframe}" discardable="${this.discardable}" ` +
+            `payload-length="${this.payload.byteLength}" payload="${this.payload.toString('hex')}"/>`;
+        return dump;
     }
 
     parseContent(data: Buffer): void {

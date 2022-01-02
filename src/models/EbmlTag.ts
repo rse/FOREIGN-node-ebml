@@ -19,6 +19,7 @@ export abstract class EbmlTag {
     }
 
     protected abstract encodeContent(): Buffer;
+    protected abstract dumpContent(): String;
 
     public abstract parseContent(content: Buffer): void;
 
@@ -52,5 +53,9 @@ export abstract class EbmlTag {
             vintSize,
             content
         ]);
+    }
+
+    public dump(): String {
+        return this.dumpContent();
     }
 }
