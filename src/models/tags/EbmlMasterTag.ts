@@ -1,7 +1,7 @@
 import { EbmlTag } from "../EbmlTag";
 import { EbmlTagId2Name } from "../enums/EbmlTagId";
-import { EbmlElementType } from "../enums/EbmlElementType";
-import { EbmlTagPosition } from "../enums/EbmlTagPosition";
+import { EbmlElementType, EbmlElementType2Name } from "../enums/EbmlElementType";
+import { EbmlTagPosition, EbmlTagPosition2Name } from "../enums/EbmlTagPosition";
 import { Tools } from "../../tools";
 import { EbmlTagFactory } from "../EbmlTagFactory";
 
@@ -30,17 +30,20 @@ export class EbmlMasterTag extends EbmlTag {
         const tag = EbmlTagId2Name["0x" + this.id.toString(16)];
         let dump;
         if (this.position === EbmlTagPosition.Start)
-            dump = `<${tag} content="false">`;
+            dump = `<${tag} type="${EbmlElementType2Name[this.type]}" ` +
+                `position="${EbmlTagPosition2Name[this.position]}" size="${this.size}">`;
         else if (this.position === EbmlTagPosition.End)
             dump = `</${tag}>`;
         else if (this.position === EbmlTagPosition.Content) {
             if (this._children.length > 0) {
-                dump = `<${tag} content="true">\n`;
+                dump = `<${tag} type="${EbmlElementType2Name[this.type]}" ` +
+                    `position="${EbmlTagPosition2Name[this.position]}" size="${this.size}">\n`;
                 dump += (this._children.map(child => child.dump()).join("").replace(/^(.+)$/mg, "    $1"));
                 dump += "</${tag}>";
             }
             else
-                dump = `<${tag} content="true"/>`;
+                dump = `<${tag} type="${EbmlElementType2Name[this.type]}" ` +
+                    `position="${EbmlTagPosition2Name[this.position]}" size="${this.size}"/>`;
         }
         return dump;
     }

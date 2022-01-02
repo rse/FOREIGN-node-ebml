@@ -3,6 +3,7 @@ import { BlockLacing, BlockLacing2Name } from "../enums/BlockLacing";
 import { Tools } from "../../tools";
 import { EbmlTagId, EbmlTagId2Name } from "../enums/EbmlTagId";
 import { EbmlElementType, EbmlElementType2Name } from "../enums/EbmlElementType";
+import { EbmlTagPosition2Name } from "../enums/EbmlTagPosition";
 
 export class Block extends EbmlDataTag {
     payload: Buffer;
@@ -61,6 +62,7 @@ export class Block extends EbmlDataTag {
     dumpContent(): String {
         const tag = EbmlTagId2Name["0x" + this.id.toString(16)];
         const dump = `<${tag} type="${EbmlElementType2Name[this.type]}" ` +
+            `position="${EbmlTagPosition2Name[this.position]}" size="${this.size}" ` +
             `track="${this.track}" value="${this.value}" ` +
             `invisible="${this.invisible}" lacing="${BlockLacing2Name[this.lacing]}" ` +
             `payload-length="${this.payload.byteLength}" payload="${this.payload.toString('hex')}"/>`;

@@ -3,6 +3,7 @@ import { Block } from "./Block";
 import { EbmlTagId, EbmlTagId2Name } from "../enums/EbmlTagId";
 import { EbmlElementType2Name } from "../enums/EbmlElementType";
 import { BlockLacing2Name } from "../enums/BlockLacing";
+import { EbmlTagPosition2Name } from "../enums/EbmlTagPosition";
 
 export class SimpleBlock extends Block {
 
@@ -34,6 +35,7 @@ export class SimpleBlock extends Block {
     dumpContent(): String {
         const tag = EbmlTagId2Name["0x" + this.id.toString(16)];
         const dump = `<${tag} type="${EbmlElementType2Name[this.type]}" ` +
+            `position="${EbmlTagPosition2Name[this.position]}" size="${this.size}" ` +
             `track="${this.track}" value="${this.value}" ` +
             `invisible="${this.invisible}" lacing="${BlockLacing2Name[this.lacing]}" ` +
             `keyframe="${this.keyframe}" discardable="${this.discardable}" ` +
