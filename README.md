@@ -23,6 +23,8 @@ decoding and encoding EBML.
 
 The extension of Dr. Ralf S. Engelschall was made to add the dumping of
 EBML as XML (via `EbmlTag::dump()`) in order to simplify the debugging of EBML streams.
+As NPM only allows `M.N.K`-style versions, the extension fork uses version numbers
+starting with `1.1.0`.
 
 # Install
 
