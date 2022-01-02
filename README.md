@@ -11,7 +11,7 @@ and the resulting [EBML Specification IETF RFC][EBML Specification IETF RFC].
 
 This is Dr. Ralf S. Engelschall's [npm @rse/ebml-stream][npm-rse-ebml-stream]
 extension fork of Austin Blake's [npm ebml-stream][npm-ebml-stream] package (version `1.0.3`), which itself
-was rewritten from version `3.0.0` of the existing [npm ebml][npm-ebml] package.
+was rewritten from Jonathan Sifuentes & Mark Schmale's [npm ebml][npm-ebml] package (version `3.0.0`).
 
 The rewrite by Austin Blake was performed mainly to enable modification
 of tags during streaming. (At the time of this writing, the referenced

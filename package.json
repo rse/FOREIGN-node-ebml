@@ -6,7 +6,7 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "maintainers": [
-    "Austin Blake <austin.leroy@hotmail.com>"
+    "Dr. Ralf S. Engelschall <rse@engelschall.com>"
   ],
   "directories": {
     "lib": "lib"
