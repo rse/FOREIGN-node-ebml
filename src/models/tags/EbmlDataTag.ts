@@ -60,8 +60,10 @@ export class EbmlDataTag extends EbmlTag {
         const tag = EbmlTagId2Name["0x" + this.id.toString(16)];
         let dump = `<${tag} type="${EbmlElementType2Name[this.type]}" ` +
             `position="${EbmlTagPosition2Name[this.position]}" size="${this.size}" `;
-        if (this.type === EbmlElementType.Binary)
-            dump += `data-length="${this.data.length}" data="${this.data.toString("hex")}"`;
+        if (this.type === EbmlElementType.Binary) {
+            const data = Buffer.from(this.data)
+            dump += `data-length="${data.byteLength}" data="${data.toString("hex")}"`;
+        }
         else
             dump += `data="${this.data}"`;
         dump += "/>";
